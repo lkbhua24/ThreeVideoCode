@@ -150,3 +150,10 @@ video, img {
   max-height: 80vh;
   border-radius: 8px;
 }
+
+/* Ensure background media fully covers viewport and has square corners */
+.background-media-container img,
+.background-media-container video {
+  max-height: none;
+  border-radius: 0;
+}

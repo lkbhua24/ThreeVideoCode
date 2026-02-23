@@ -4,11 +4,23 @@ import './index.css';
 import Bubble from './components/Bubble';
 import Menu from './components/Menu';
 import TimelineView from './components/TimelineView';
+import BackgroundMedia from './components/BackgroundMedia';
+import LoveClock from './components/LoveClock';
+import RomanticFooter from './components/RomanticFooter';
+import MessageBoard from './components/MessageBoard';
+import SiteTitle from './components/SiteTitle';
+import PhotoCarousel from './components/PhotoCarousel';
+import BearCyclists from './components/BearCyclists';
+import TravelAlbum from './components/TravelAlbum';
+import TravelPin from './components/TravelPin';
+import MorningDusk from './components/MorningDusk';
 
 function App() {
   const [memories, setMemories] = useState([]);
   const [selectedMemory, setSelectedMemory] = useState(null);
-  const [currentMode, setCurrentMode] = useState('view'); // Default to view (bubbles)
+  const [currentMode, setCurrentMode] = useState('home');
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [totalHours, setTotalHours] = useState(0); // Track accumulated hours for hearts
   const containerRef = useRef(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [clickPosition, setClickPosition] = useState(null); // {x, y} for ripple origin
@@ -69,7 +81,24 @@ function App() {
 
   return (
     <div className="bubble-container" ref={containerRef}>
-      <Menu currentMode={currentMode} onModeChange={setCurrentMode} />
+      {currentMode === 'view' && (
+        <BackgroundMedia 
+          src="/Nice.png" 
+          kind="image" 
+          opacity={0.4} 
+          blendMode="soft-light" 
+        />
+      )}
+
+      <Menu currentMode={currentMode} onModeChange={(mode) => {
+        // If switching to travel mode from menu, clear selected city to show overview
+        if (mode === 'travel') {
+          setSelectedCity(null);
+        }
+        setCurrentMode(mode);
+      }} />
+
+      <SiteTitle />
 
       {/* Background Glow Elements */}
       <div className="glow-effect glow-1"></div>
@@ -77,11 +106,44 @@ function App() {
       <div className="glow-effect glow-3"></div>
 
       {/* Mode-specific content */}
+      {currentMode === 'home' && (
+        <>
+          <PhotoCarousel />
+          
+          {/* Travel Pin Component - Positioned in the gap */}
+          <div style={{
+            position: 'absolute',
+            top: '120px',
+            left: '1068px', // 24px (margin) + 950px (Carousel) + 26px (gap) + 68px (adjustment)
+            width: '240px',
+            height: '750px', // Spans height of Clock + MessageBoard roughly
+            zIndex: 5
+          }}>
+            <TravelPin onNavigate={(city) => {
+              setSelectedCity(city);
+              setCurrentMode('travel');
+            }} />
+          </div>
+
+          <LoveClock onHourComplete={() => setTotalHours(prev => prev + 1)} />
+          <MessageBoard />
+          <RomanticFooter />
+        </>
+      )}
+
       {currentMode === 'interview' && (
         <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(255,255,255,0.8)', padding: '20px 40px', borderRadius: 20, textAlign: 'center' }}>
           <h2>🎤 采访模式</h2>
           <p>录音功能开发中...</p>
         </div>
+      )}
+
+      {currentMode === 'travel' && (
+        <TravelAlbum city={selectedCity} onBack={() => setCurrentMode('home')} />
+      )}
+
+      {currentMode === 'morning_dusk' && (
+        <MorningDusk />
       )}
 
       {currentMode === 'memory' && (

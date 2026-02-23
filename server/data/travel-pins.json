@@ -1,0 +1,42 @@
+[
+  {
+    "cityEN": "Paris",
+    "cityCN": "巴黎",
+    "arrivedAt": "2025-05-20",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "Paris"
+  },
+  {
+    "cityEN": "Tokyo",
+    "cityCN": "东京",
+    "arrivedAt": "2025-06-15",
+    "emojiType": "food",
+    "emojiVariant": 2,
+    "folderName": "Tokyo"
+  },
+  {
+    "cityEN": "Kyoto",
+    "cityCN": "京都",
+    "arrivedAt": "2025-06-20",
+    "emojiType": "animal",
+    "emojiVariant": 3,
+    "folderName": "Kyoto"
+  },
+  {
+    "cityEN": "London",
+    "cityCN": "伦敦",
+    "arrivedAt": "2025-07-10",
+    "emojiType": "flower",
+    "emojiVariant": 4,
+    "folderName": "London"
+  },
+  {
+    "cityEN": "NanChang",
+    "cityCN": "南昌",
+    "arrivedAt": "2025-08-27",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "Nanchang"
+  }
+]

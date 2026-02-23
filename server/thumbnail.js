@@ -2,10 +2,14 @@ const sharp = require('sharp');
 const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const fs = require('fs');
-const ffmpegStatic = require('ffmpeg-static');
 
-// Set ffmpeg path
-ffmpeg.setFfmpegPath(ffmpegStatic);
+let ffmpegStatic;
+try {
+  ffmpegStatic = require('ffmpeg-static');
+  ffmpeg.setFfmpegPath(ffmpegStatic);
+} catch (e) {
+  console.warn('ffmpeg-static not found, video thumbnails disabled');
+}
 
 // Ensure thumbnail directory exists
 const THUMB_DIR = path.join(__dirname, '../thumbnails');
@@ -36,6 +40,11 @@ const generateImageThumbnail = async (filePath, id) => {
 
 // Generate thumbnail for video
 const generateVideoThumbnail = (filePath, id) => {
+  if (!ffmpegStatic) {
+    console.warn(`Skipping video thumbnail for ${id}: ffmpeg-static missing`);
+    return Promise.resolve(false);
+  }
+
   return new Promise((resolve) => {
     const thumbPath = getThumbnailPath(id);
     if (fs.existsSync(thumbPath)) return resolve(true);
