@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Calendar, Paperclip, Heart, X, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, Calendar, Paperclip, Heart, X, Edit2, Trash2, ChevronLeft, ChevronRight, MessageCircle, Send, Book } from 'lucide-react';
 
-const MorningDusk = () => {
+const MorningDusk = ({ onReturnToMemory }) => {
   // State
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10,6 +10,9 @@ const MorningDusk = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showModal, setShowModal] = useState(false);
   const [currentStory, setCurrentStory] = useState(null); // For editing
+  const [expandedStory, setExpandedStory] = useState(null); // For viewing
+  const [commentText, setCommentText] = useState('');
+  const [commentAuthor, setCommentAuthor] = useState('');
   const [timelineDates, setTimelineDates] = useState([]);
 
   // Form State
@@ -20,6 +23,7 @@ const MorningDusk = () => {
     author: '',
     tags: '',
     mood: '#FFB7B2',
+    bgColor: '#ffffff', // Default white background
     type: 'note' // 'note' | 'heart'
   });
 
@@ -35,6 +39,19 @@ const MorningDusk = () => {
   // Fetch Stories
   useEffect(() => {
     fetchStories();
+  }, []);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('selectedStoryDate');
+    if (saved) {
+      setSelectedDate(saved);
+      localStorage.removeItem('selectedStoryDate');
+    }
+  }, []);
+  const [showReturn, setShowReturn] = useState(false);
+  useEffect(() => {
+    const flag = localStorage.getItem('fromMemoryMode');
+    if (flag === '1') setShowReturn(true);
   }, []);
 
   const fetchStories = async () => {
@@ -105,6 +122,7 @@ const MorningDusk = () => {
             author: '',
             tags: '',
             mood: '#FFB7B2',
+            bgColor: '#ffffff',
             type: 'note'
         });
         setCurrentStory(null);
@@ -128,6 +146,40 @@ const MorningDusk = () => {
     setCurrentStory(story);
     setFormData({ ...story });
     setShowModal(true);
+  };
+
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (!commentText.trim() || !expandedStory) return;
+
+    try {
+      const res = await fetch(`/api/stories/${expandedStory.id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            content: commentText,
+            author: commentAuthor.trim() || 'Anonymous' 
+        })
+      });
+
+      if (res.ok) {
+        const newComment = await res.json();
+        const updatedStory = {
+            ...expandedStory,
+            comments: [...(expandedStory.comments || []), newComment]
+        };
+        setExpandedStory(updatedStory);
+        
+        // Update local stories list as well
+        setStories(stories.map(s => s.id === updatedStory.id ? updatedStory : s));
+        
+        setCommentText('');
+        // Keep author name for convenience, or clear it? User might want to reply multiple times.
+        // Let's keep it.
+      }
+    } catch (err) {
+      console.error('Failed to add comment:', err);
+    }
   };
 
   return (
@@ -185,6 +237,31 @@ const MorningDusk = () => {
         backdropFilter: 'blur(10px)',
         borderBottom: '1px solid rgba(255,255,255,0.2)'
       }}>
+        {showReturn && (
+          <button
+            onClick={() => {
+              localStorage.removeItem('fromMemoryMode');
+              onReturnToMemory && onReturnToMemory();
+            }}
+            style={{
+              position: 'fixed',
+              top: '16px',
+              right: '16px',
+              zIndex: 1000,
+              padding: '8px 16px',
+              borderRadius: '20px',
+              border: 'none',
+              background: 'rgba(255,255,255,0.85)',
+              color: '#DE7AD6',
+              fontSize: '14px',
+              cursor: 'pointer',
+              boxShadow: '0 6px 16px rgba(0,0,0,0.15)',
+              backdropFilter: 'blur(6px)'
+            }}
+          >
+            返回回忆
+          </button>
+        )}
         {/* Placeholder for left side to balance the layout */}
         <div style={{ width: '120px' }}></div>
 
@@ -249,6 +326,7 @@ const MorningDusk = () => {
                     author: '',
                     tags: '',
                     mood: '#FFB7B2',
+                    bgColor: '#ffffff',
                     type: 'note'
                 });
                 setShowModal(true);
@@ -393,9 +471,9 @@ const MorningDusk = () => {
                             whileHover={{ y: -5, rotate: story.type === 'heart' ? 2 : 0 }}
                             style={{
                                 background: story.type === 'heart' 
-                                    ? `linear-gradient(135deg, ${story.mood} 0%, #fff 100%)`
-                                    : '#fff',
-                                borderRadius: story.type === 'heart' ? '30px 30px 4px 30px' : '20px', // Round-smooth square or heart-ish
+                                    ? `linear-gradient(135deg, ${story.mood}22 0%, ${story.bgColor || '#fff'} 100%)` 
+                                    : (story.bgColor || '#fff'),
+                                borderRadius: story.type === 'heart' ? '24px' : '20px', 
                                 padding: '24px',
                                 position: 'relative',
                                 boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
@@ -403,49 +481,122 @@ const MorningDusk = () => {
                                 minHeight: '200px',
                                 display: 'flex',
                                 flexDirection: 'column',
-                                clipPath: story.type === 'heart' 
-                                    ? 'path("M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z")' // SVG path for heart shape? No, clip-path is tricky for content. 
-                                    // Let's use border-radius trick for "smooth round square" as requested default.
-                                    : '20px'
+                                overflow: 'hidden', // Clip the large heart
+                                border: story.type === 'heart' ? `2px solid ${story.mood}` : 'none'
                             }}
-                            onClick={() => openEdit(story)}
+                            onClick={() => setExpandedStory(story)}
                         >
                             {/* Paperclip Decoration */}
                             {story.type === 'note' && (
-                                <div style={{
-                                    position: 'absolute',
-                                    top: '-15px',
-                                    left: '20px',
-                                    color: '#888',
-                                    transform: 'rotate(-15deg)',
-                                    zIndex: 5
-                                }}>
+                                <div 
+                                    style={{
+                                        position: 'absolute',
+                                        top: '-15px',
+                                        left: '20px',
+                                        color: '#888',
+                                        transform: 'rotate(-15deg)',
+                                        zIndex: 5
+                                    }}
+                                >
                                     <Paperclip size={32} />
                                 </div>
                             )}
 
-                            {/* Heart Decoration */}
-                            {story.type === 'heart' && (
-                                <motion.div 
-                                    animate={{ y: [0, -5, 0] }}
-                                    transition={{ duration: 3, repeat: Infinity }}
-                                    style={{
-                                        position: 'absolute',
-                                        top: '10px',
-                                        right: '10px',
-                                        color: '#fff',
-                                        opacity: 0.8
-                                    }}
-                                >
-                                    <Heart fill="#fff" size={24} />
-                                </motion.div>
+                            {/* Edit/Delete Actions Top Right */}
+                            {story.type === 'note' && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '10px',
+                                    right: '10px',
+                                    display: 'flex',
+                                    gap: '8px',
+                                    zIndex: 10
+                                }}>
+                                    <div
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            openEdit(story);
+                                        }}
+                                        style={{
+                                            padding: '6px',
+                                            borderRadius: '50%',
+                                            background: 'rgba(0,0,0,0.05)',
+                                            color: '#666',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'}
+                                        title="编辑"
+                                    >
+                                        <Edit2 size={14} />
+                                    </div>
+                                    <div
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDelete(story.id);
+                                        }}
+                                        style={{
+                                            padding: '6px',
+                                            borderRadius: '50%',
+                                            background: 'rgba(0,0,0,0.05)',
+                                            color: '#ff4d4f',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 77, 79, 0.1)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'}
+                                        title="删除"
+                                    >
+                                        <Trash2 size={14} />
+                                    </div>
+                                </div>
                             )}
 
-                            <div style={{ fontSize: '14px', color: '#888', marginBottom: '8px' }}>
+                            {/* Heart Decoration (Background Watermark) */}
+                            {story.type === 'heart' && (
+                                <div style={{
+                                    position: 'absolute',
+                                    bottom: '-20px',
+                                    right: '-20px',
+                                    opacity: 0.1,
+                                    zIndex: 0,
+                                    transform: 'rotate(-15deg)'
+                                }}>
+                                    <Heart fill={story.mood} color={story.mood} size={180} />
+                                </div>
+                            )}
+                            
+                            {/* Small Heart Icon Top Right */}
+                            {story.type === 'heart' && (
+                                <div 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        openEdit(story);
+                                    }}
+                                    style={{
+                                        position: 'absolute',
+                                        top: '15px',
+                                        right: '15px',
+                                        zIndex: 1,
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <Heart fill={story.mood} color={story.mood} size={24} />
+                                </div>
+                            )}
+
+                            <div style={{ fontSize: '14px', color: '#888', marginBottom: '8px', position: 'relative', zIndex: 1 }}>
                                 {story.date}
                             </div>
                             
-                            <h3 style={{ margin: '0 0 12px 0', fontSize: '20px', color: '#333' }}>
+                            <h3 style={{ margin: '0 0 12px 0', fontSize: '20px', color: '#333', position: 'relative', zIndex: 1 }}>
                                 {story.title}
                             </h3>
                             
@@ -455,12 +606,14 @@ const MorningDusk = () => {
                                 color: '#555', 
                                 lineHeight: '1.6',
                                 whiteSpace: 'pre-wrap',
-                                fontSize: '15px'
+                                fontSize: '15px',
+                                position: 'relative', 
+                                zIndex: 1
                             }}>
                                 {story.content}
                             </p>
 
-                            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#999' }}>
+                            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#999', position: 'relative', zIndex: 1 }}>
                                 <span>From: {story.author}</span>
                                 <div style={{ display: 'flex', gap: '4px' }}>
                                     {story.tags && story.tags.split(' ').map((tag, i) => (
@@ -475,7 +628,7 @@ const MorningDusk = () => {
         )}
       </div>
 
-      {/* Edit/Create Modal */}
+      {/* Edit/Create Modal - Side Drawer Style */}
       <AnimatePresence>
         {showModal && (
             <motion.div
@@ -485,174 +638,542 @@ const MorningDusk = () => {
                 style={{
                     position: 'fixed',
                     top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.5)',
-                    backdropFilter: 'blur(5px)',
+                    background: 'rgba(240, 242, 245, 0.8)', // Light neutral background
+                    backdropFilter: 'blur(8px)',
                     zIndex: 200,
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    fontFamily: '"Ma Shan Zheng", cursive, sans-serif'
                 }}
                 onClick={(e) => {
                     if (e.target === e.currentTarget) setShowModal(false);
                 }}
             >
                 <motion.div
-                    initial={{ scale: 0.9, y: 20 }}
-                    animate={{ scale: 1, y: 0 }}
-                    exit={{ scale: 0.9, y: 20 }}
+                    initial={{ scale: 0.95, opacity: 0, y: 10 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.95, opacity: 0, y: 10 }}
                     style={{
-                        background: '#fff',
                         width: '90%',
-                        maxWidth: '500px',
-                        borderRadius: '24px',
-                        padding: '30px',
-                        boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
+                        maxWidth: '1000px',
+                        height: '85vh',
+                        background: 'transparent',
+                        display: 'flex',
+                        gap: '24px',
                         position: 'relative'
                     }}
                 >
-                    <button 
-                        onClick={() => setShowModal(false)}
-                        style={{ position: 'absolute', top: '20px', right: '20px', border: 'none', background: 'none', cursor: 'pointer' }}
-                    >
-                        <X size={24} color="#999" />
-                    </button>
-
-                    <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>
-                        {currentStory ? '编辑故事' : '写一段故事'}
-                    </h2>
-
-                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#666' }}>日期</label>
-                            <input 
-                                type="date" 
-                                required
-                                value={formData.date}
-                                onChange={e => setFormData({...formData, date: e.target.value})}
-                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
-                            />
+                    {/* Main Editor Area (60% weight) */}
+                    <div style={{
+                        flex: '1 1 60%',
+                        background: formData.bgColor || '#fff', // Apply selected background color
+                        borderRadius: '24px',
+                        boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        transition: 'background 0.3s ease'
+                    }}>
+                        {/* Top Bar */}
+                        <div style={{
+                            padding: '16px 32px',
+                            borderBottom: '1px solid #f0f0f0',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                        }}>
+                             <button 
+                                onClick={() => setShowModal(false)}
+                                style={{ 
+                                    border: 'none', 
+                                    background: 'none', 
+                                    cursor: 'pointer',
+                                    color: '#666',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    fontSize: '14px',
+                                    padding: '8px 12px',
+                                    borderRadius: '8px',
+                                    transition: 'background 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                            >
+                                <ChevronLeft size={16} /> 返回
+                            </button>
+                            <div style={{ fontSize: '12px', color: '#aaa' }}>
+                                {currentStory ? '编辑模式' : '创作模式'}
+                            </div>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                {currentStory && (
+                                    <button 
+                                        type="button"
+                                        onClick={() => {
+                                            handleDelete(currentStory.id);
+                                            setShowModal(false);
+                                        }}
+                                        style={{ 
+                                            padding: '8px 16px', 
+                                            borderRadius: '12px', 
+                                            border: 'none', 
+                                            background: '#fff1f0', 
+                                            color: '#ff4d4f',
+                                            cursor: 'pointer',
+                                            fontSize: '14px'
+                                        }}
+                                    >
+                                        删除
+                                    </button>
+                                )}
+                                <button 
+                                    onClick={handleSubmit}
+                                    style={{ 
+                                        padding: '8px 24px', 
+                                        borderRadius: '12px', 
+                                        border: 'none', 
+                                        background: 'linear-gradient(135deg, #DE7AD6 0%, #B2EBF2 100%)', 
+                                        color: '#fff', 
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer',
+                                        fontSize: '14px',
+                                        boxShadow: '0 4px 12px rgba(222, 122, 214, 0.2)'
+                                    }}
+                                >
+                                    {currentStory ? '保存' : '发布'}
+                                </button>
+                            </div>
                         </div>
 
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#666' }}>标题</label>
+                        {/* Editor Content */}
+                        <div style={{ flex: 1, padding: '40px 60px', overflowY: 'auto' }}>
                             <input 
                                 type="text" 
-                                required
-                                placeholder="给故事起个名字..."
+                                placeholder="无标题" 
                                 value={formData.title}
                                 onChange={e => setFormData({...formData, title: e.target.value})}
-                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
+                                style={{
+                                    width: '100%',
+                                    fontSize: '32px',
+                                    fontWeight: 'bold',
+                                    border: 'none',
+                                    outline: 'none',
+                                    color: '#222',
+                                    marginBottom: '12px',
+                                    background: 'transparent',
+                                    fontFamily: '"Ma Shan Zheng", cursive'
+                                }}
                             />
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#666' }}>内容</label>
+                            <div style={{ 
+                                width: '48px', 
+                                height: '4px', 
+                                background: formData.mood || '#DE7AD6', 
+                                borderRadius: '2px', 
+                                marginBottom: '32px',
+                                opacity: 0.8
+                            }} />
                             <textarea 
-                                required
-                                rows={5}
                                 placeholder="写下那一刻的点点滴滴..."
                                 value={formData.content}
                                 onChange={e => setFormData({...formData, content: e.target.value})}
-                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', resize: 'none' }}
+                                style={{ 
+                                    width: '100%', 
+                                    minHeight: '400px',
+                                    border: 'none', 
+                                    outline: 'none', 
+                                    resize: 'none',
+                                    fontSize: '18px',
+                                    lineHeight: '2',
+                                    color: '#444',
+                                    background: 'transparent',
+                                    fontFamily: '"Ma Shan Zheng", cursive'
+                                }}
                             />
                         </div>
+                    </div>
 
-                        <div style={{ display: 'flex', gap: '16px' }}>
-                            <div style={{ flex: 1 }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#666' }}>撰写人</label>
+                    {/* Right Drawer (40% weight) */}
+                    <div style={{
+                        flex: '0 0 320px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '16px'
+                    }}>
+                        {/* Info Panel 1: Basics */}
+                        <div style={{
+                            background: '#fff',
+                            borderRadius: '20px',
+                            padding: '20px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                        }}>
+                            <div style={{ fontSize: '13px', color: '#999', marginBottom: '16px', fontWeight: 'bold' }}>基础信息</div>
+                            <div style={{ marginBottom: '16px' }}>
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#666' }}>日期</label>
+                                <input 
+                                    type="date" 
+                                    value={formData.date}
+                                    onChange={e => setFormData({...formData, date: e.target.value})}
+                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #eee', background: '#fafafa', outline: 'none' }}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#666' }}>撰写人</label>
                                 <input 
                                     type="text" 
-                                    required
                                     placeholder="你的名字"
                                     value={formData.author}
                                     onChange={e => setFormData({...formData, author: e.target.value})}
-                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
+                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #eee', background: '#fafafa', outline: 'none' }}
                                 />
                             </div>
-                            <div style={{ flex: 1 }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#666' }}>标签 (空格分隔)</label>
+                        </div>
+
+                        {/* Info Panel 2: Tags & Mood */}
+                        <div style={{
+                            background: '#fff',
+                            borderRadius: '20px',
+                            padding: '20px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                        }}>
+                            <div style={{ fontSize: '13px', color: '#999', marginBottom: '16px', fontWeight: 'bold' }}>标签与心情</div>
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#666' }}>标签</label>
                                 <input 
                                     type="text" 
                                     placeholder="相遇 纪念日..."
                                     value={formData.tags}
                                     onChange={e => setFormData({...formData, tags: e.target.value})}
-                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
+                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #eee', background: '#fafafa', outline: 'none' }}
                                 />
+                            </div>
+                            
+                            <label style={{ display: 'block', marginBottom: '12px', fontSize: '13px', color: '#666' }}>背景颜色</label>
+                            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                                {[
+                                    '#ffffff', // 纯白
+                                    '#FFF0F5', // 薰衣草红
+                                    '#F0FFF0', // 蜜瓜绿
+                                    '#F0F8FF', // 爱丽丝蓝
+                                    '#FFF8DC', // 玉米丝色
+                                    '#F5F5DC', // 米色
+                                    '#E6E6FA', // 淡紫
+                                    '#FAFAFA'  // 雪白
+                                ].map(color => (
+                                    <div 
+                                        key={color}
+                                        onClick={() => setFormData({...formData, bgColor: color})}
+                                        style={{
+                                            width: '28px',
+                                            height: '28px',
+                                            borderRadius: '4px',
+                                            background: color,
+                                            cursor: 'pointer',
+                                            border: formData.bgColor === color ? '2px solid #666' : '1px solid #eee',
+                                            transition: 'transform 0.2s',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                        title={color}
+                                    />
+                                ))}
+                            </div>
+
+                            <label style={{ display: 'block', marginBottom: '12px', fontSize: '13px', color: '#666' }}>心情色调</label>
+                            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                {[
+                                    '#FFB7B2', // 柔粉
+                                    '#FFDAC1', // 蜜桃
+                                    '#FFF9C4', // 鹅黄
+                                    '#C8E6C9', // 薄荷
+                                    '#B2EBF2', // 天青
+                                    '#A7C7E7', // 雾霾蓝
+                                    '#E1BEE7', // 薰衣草
+                                    '#D7CCC8'  // 奶咖
+                                ].map(color => (
+                                    <div 
+                                        key={color}
+                                        onClick={() => setFormData({...formData, mood: color})}
+                                        style={{
+                                            width: '28px',
+                                            height: '28px',
+                                            borderRadius: '50%',
+                                            background: color,
+                                            cursor: 'pointer',
+                                            border: formData.mood === color ? '2px solid #666' : '2px solid transparent',
+                                            transition: 'transform 0.2s',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                        title={color}
+                                    />
+                                ))}
                             </div>
                         </div>
 
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#666' }}>样式风格</label>
-                            <div style={{ display: 'flex', gap: '16px' }}>
+                        {/* Info Panel 3: Style Type */}
+                        <div style={{
+                            background: '#fff',
+                            borderRadius: '20px',
+                            padding: '20px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                        }}>
+                            <div style={{ fontSize: '13px', color: '#999', marginBottom: '16px', fontWeight: 'bold' }}>展示样式</div>
+                            <div style={{ display: 'flex', gap: '12px' }}>
                                 <div 
                                     onClick={() => setFormData({...formData, type: 'note'})}
                                     style={{ 
-                                        padding: '10px 20px', 
-                                        borderRadius: '8px', 
-                                        border: formData.type === 'note' ? '2px solid #DE7AD6' : '1px solid #ddd',
-                                        background: '#fff',
-                                        cursor: 'pointer',
                                         flex: 1,
-                                        textAlign: 'center'
+                                        padding: '12px', 
+                                        borderRadius: '12px', 
+                                        border: formData.type === 'note' ? '2px solid #DE7AD6' : '1px solid #f0f0f0',
+                                        background: formData.type === 'note' ? '#fff9fc' : '#fff',
+                                        color: formData.type === 'note' ? '#DE7AD6' : '#666',
+                                        cursor: 'pointer',
+                                        textAlign: 'center',
+                                        fontSize: '14px',
+                                        transition: 'all 0.2s'
                                     }}
                                 >
-                                    <Paperclip size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> 便签
+                                    <Paperclip size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} /> 便签
                                 </div>
                                 <div 
                                     onClick={() => setFormData({...formData, type: 'heart'})}
                                     style={{ 
-                                        padding: '10px 20px', 
-                                        borderRadius: '8px', 
-                                        border: formData.type === 'heart' ? '2px solid #DE7AD6' : '1px solid #ddd',
-                                        background: '#fff',
-                                        cursor: 'pointer',
                                         flex: 1,
-                                        textAlign: 'center'
+                                        padding: '12px', 
+                                        borderRadius: '12px', 
+                                        border: formData.type === 'heart' ? '2px solid #DE7AD6' : '1px solid #f0f0f0',
+                                        background: formData.type === 'heart' ? '#fff9fc' : '#fff',
+                                        color: formData.type === 'heart' ? '#DE7AD6' : '#666',
+                                        cursor: 'pointer',
+                                        textAlign: 'center',
+                                        fontSize: '14px',
+                                        transition: 'all 0.2s'
                                     }}
                                 >
-                                    <Heart size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> 心形
+                                    <Heart size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} /> 心形
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </motion.div>
+            </motion.div>
+        )}
+      </AnimatePresence>
 
-                        <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-                            <button 
-                                type="submit"
-                                style={{ 
-                                    flex: 1, 
-                                    padding: '12px', 
-                                    borderRadius: '12px', 
-                                    border: 'none', 
-                                    background: 'linear-gradient(135deg, #DE7AD6 0%, #B2EBF2 100%)', 
-                                    color: '#fff', 
-                                    fontWeight: 'bold',
-                                    cursor: 'pointer' 
-                                }}
-                            >
-                                {currentStory ? '保存修改' : '发布故事'}
-                            </button>
-                            
-                            {currentStory && (
-                                <button 
-                                    type="button"
-                                    onClick={() => {
-                                        handleDelete(currentStory.id);
-                                        setShowModal(false);
-                                    }}
-                                    style={{ 
-                                        padding: '12px', 
-                                        borderRadius: '12px', 
-                                        border: '1px solid #ff4d4f', 
-                                        background: '#fff', 
-                                        color: '#ff4d4f',
-                                        cursor: 'pointer' 
-                                    }}
-                                >
-                                    <Trash2 size={20} />
-                                </button>
+      {/* Expanded Story View */}
+      <AnimatePresence>
+        {expandedStory && (
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(255,255,255,0.6)',
+                    backdropFilter: 'blur(12px)',
+                    zIndex: 300,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '20px'
+                }}
+                onClick={(e) => {
+                    if (e.target === e.currentTarget) setExpandedStory(null);
+                }}
+            >
+                <motion.div
+                    layoutId={expandedStory.id}
+                    style={{
+                        background: expandedStory.type === 'heart' 
+                            ? `linear-gradient(135deg, ${expandedStory.mood}11 0%, ${expandedStory.bgColor || '#fff'} 100%)` 
+                            : (expandedStory.bgColor || '#fff'),
+                        width: '100%',
+                        maxWidth: '700px',
+                        height: '85vh',
+                        borderRadius: '24px',
+                        boxShadow: '0 30px 60px rgba(0,0,0,0.1)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        border: '1px solid rgba(0,0,0,0.05)'
+                    }}
+                >
+                    {/* Close Button */}
+                    <button 
+                        onClick={() => setExpandedStory(null)}
+                        style={{ 
+                            position: 'absolute', 
+                            top: '20px', 
+                            right: '20px', 
+                            zIndex: 10,
+                            background: 'rgba(255,255,255,0.8)',
+                            border: 'none',
+                            borderRadius: '50%',
+                            padding: '8px',
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                        }}
+                    >
+                        <X size={24} color="#666" />
+                    </button>
+
+                    {/* Scrollable Content Area */}
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '50px 60px' }}>
+                        
+                        {/* Header Section */}
+                        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                            <div style={{ fontSize: '14px', color: '#999', marginBottom: '10px', letterSpacing: '1px' }}>
+                                {expandedStory.date} · {expandedStory.author}
+                            </div>
+                            <h1 style={{ 
+                                fontSize: '32px', 
+                                color: '#333', 
+                                margin: '0 0 20px 0',
+                                fontFamily: '"Ma Shan Zheng", cursive',
+                                fontWeight: 'normal'
+                            }}>
+                                {expandedStory.title}
+                            </h1>
+                            <div style={{ width: '40px', height: '3px', background: expandedStory.mood || '#DE7AD6', margin: '0 auto', borderRadius: '2px', opacity: 0.5 }} />
+                        </div>
+
+                        {/* Story Content */}
+                        <div style={{ 
+                            fontSize: '18px', 
+                            lineHeight: '2.2', 
+                            color: '#444', 
+                            whiteSpace: 'pre-wrap',
+                            textAlign: 'justify',
+                            fontFamily: '"Ma Shan Zheng", cursive' // Keeping the handwriting style
+                        }}>
+                            {expandedStory.content}
+                        </div>
+
+                        {/* Divider */}
+                        <div style={{ 
+                            margin: '80px 0 40px', 
+                            borderTop: '1px dashed #ddd',
+                            position: 'relative',
+                            textAlign: 'center'
+                        }}>
+                            <span style={{ 
+                                background: '#fff', 
+                                padding: '0 15px', 
+                                position: 'relative', 
+                                top: '-12px',
+                                color: '#aaa',
+                                fontSize: '14px'
+                            }}>
+                                <MessageCircle size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
+                                留言区
+                            </span>
+                        </div>
+
+                        {/* Comments List */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '40px' }}>
+                            {expandedStory.comments && expandedStory.comments.length > 0 ? (
+                                expandedStory.comments.map((comment, idx) => (
+                                    <div key={idx} style={{ 
+                                        padding: '20px', 
+                                        background: '#fcfcfc', 
+                                        borderRadius: '16px',
+                                        fontSize: '14px',
+                                        border: '1px solid #f0f0f0'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#999', fontSize: '12px' }}>
+                                            <span>{comment.author || 'Anonymous'}</span>
+                                            <span>{new Date(comment.createdAt).toLocaleDateString()}</span>
+                                        </div>
+                                        <div style={{ color: '#555', lineHeight: '1.6', fontSize: '15px' }}>
+                                            {comment.content}
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div style={{ textAlign: 'center', color: '#ccc', fontStyle: 'italic', padding: '20px' }}>
+                                    还没有留言，写下第一条回应吧...
+                                </div>
                             )}
                         </div>
-                    </form>
+
+                    </div>
+
+                    {/* Comment Input Area (Fixed at bottom) */}
+                    <div style={{ 
+                        padding: '20px 40px', 
+                        background: '#fff', 
+                        borderTop: '1px solid #f5f5f5',
+                        display: 'flex',
+                        gap: '16px',
+                        alignItems: 'center'
+                    }}>
+                        <input 
+                            type="text" 
+                            placeholder="你的名字" 
+                            value={commentAuthor}
+                            onChange={e => setCommentAuthor(e.target.value)}
+                            style={{
+                                width: '100px',
+                                padding: '14px 16px',
+                                borderRadius: '30px',
+                                border: '1px solid #eee',
+                                background: '#f8f8f8',
+                                outline: 'none',
+                                fontSize: '14px',
+                                transition: 'all 0.2s',
+                                textAlign: 'center'
+                            }}
+                            onFocus={(e) => e.target.style.background = '#fff'}
+                            onBlur={(e) => e.target.style.background = '#f8f8f8'}
+                        />
+                        <input 
+                            type="text" 
+                            placeholder="写下你的回应..." 
+                            value={commentText}
+                            onChange={e => setCommentText(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleCommentSubmit(e)}
+                            style={{
+                                flex: 1,
+                                padding: '14px 24px',
+                                borderRadius: '30px',
+                                border: '1px solid #eee',
+                                background: '#f8f8f8',
+                                outline: 'none',
+                                fontSize: '15px',
+                                transition: 'all 0.2s'
+                            }}
+                            onFocus={(e) => e.target.style.background = '#fff'}
+                            onBlur={(e) => e.target.style.background = '#f8f8f8'}
+                        />
+                        <button 
+                            onClick={handleCommentSubmit}
+                            disabled={!commentText.trim()}
+                            style={{
+                                width: '50px',
+                                height: '50px',
+                                borderRadius: '50%',
+                                border: 'none',
+                                background: commentText.trim() ? '#DE7AD6' : '#f0f0f0',
+                                color: '#fff',
+                                cursor: commentText.trim() ? 'pointer' : 'default',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s',
+                                boxShadow: commentText.trim() ? '0 4px 12px rgba(222, 122, 214, 0.3)' : 'none'
+                            }}
+                        >
+                            <Send size={22} />
+                        </button>
+                    </div>
+
                 </motion.div>
             </motion.div>
         )}

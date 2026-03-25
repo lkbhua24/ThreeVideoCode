@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 
-const Bubble = ({ memory, onClick, containerSize }) => {
+const Bubble = ({ memory, onClick, containerSize, targetPosition }) => {
   const controls = useAnimation();
   const [thumbError, setThumbError] = useState(false);
   const [isRippling, setIsRippling] = useState(false);
@@ -31,44 +31,57 @@ const Bubble = ({ memory, onClick, containerSize }) => {
     let isMounted = true;
     
     const float = async () => {
-      // Initial random position
-      // We check if it's the first run by checking if we are at 0,0 (default)
-      // or simply rely on the fact that we want to start somewhere random
-      // controls.set is the correct way to set initial state without animation
-
-
       while (isMounted) {
-        // Generate random position within container
-        // Keep some padding (e.g. 60px) from edges
-        const padding = 60;
-        const x = Math.random() * (containerSize.width - padding * 2) + padding;
-        const y = Math.random() * (containerSize.height - padding * 2) + padding;
-        
-        // Random duration between 8 and 12 seconds for natural feel
-        const duration = 8 + Math.random() * 4;
-        
-        await controls.start({
-          x,
-          y,
-          transition: { 
-            duration, 
-            ease: "easeInOut" 
-          }
-        });
+        if (targetPosition) {
+          // If target position is set, move there and stay
+          await controls.start({
+            x: targetPosition.x,
+            y: targetPosition.y,
+            transition: { 
+              duration: 2, // Smooth transition to heart shape
+              ease: "easeInOut" 
+            }
+          });
+          // Wait a bit to avoid busy loop if targetPosition doesn't change
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } else {
+          // Random floating behavior
+          const padding = 60;
+          const x = Math.random() * (containerSize.width - padding * 2) + padding;
+          const y = Math.random() * (containerSize.height - padding * 2) + padding;
+          
+          const duration = 8 + Math.random() * 4;
+          
+          await controls.start({
+            x,
+            y,
+            transition: { 
+              duration, 
+              ease: "easeInOut" 
+            }
+          });
+        }
       }
     };
 
     if (containerSize.width > 0 && containerSize.height > 0) {
-      // Set initial position instantly
-      const initialX = Math.random() * (containerSize.width - 60);
-      const initialY = Math.random() * (containerSize.height - 60);
-      controls.set({ x: initialX, y: initialY });
+      // Set initial random position if not already set (conceptually)
+      // We use a ref or just rely on controls.set
+      // If we have a targetPosition on mount, we might want to start there or animate there.
+      // But typically bubbles start random.
+      
+      // Only set random start if we don't have a target yet, or even if we do, starting random then moving is fine.
+      if (!targetPosition) {
+        const initialX = Math.random() * (containerSize.width - 60);
+        const initialY = Math.random() * (containerSize.height - 60);
+        controls.set({ x: initialX, y: initialY });
+      }
       
       float();
     }
 
     return () => { isMounted = false; controls.stop(); };
-  }, [containerSize, controls]);
+  }, [containerSize, controls, targetPosition]);
 
   const handleClick = (e) => {
     // Trigger ripple
@@ -110,7 +123,21 @@ const Bubble = ({ memory, onClick, containerSize }) => {
       }}
       title={memory.name}
     >
-      {memory.thumbnail && !thumbError ? (
+      {memory.type === 'video' ? (
+        <video 
+          src={`${memory.url}#t=0.001`} 
+          style={{ 
+            width: '100%', 
+            height: '100%', 
+            objectFit: 'cover',
+            pointerEvents: 'none',
+            opacity: 0.85
+          }} 
+          preload="metadata"
+          muted
+          playsInline
+        />
+      ) : memory.thumbnail && !thumbError ? (
         <img 
           src={memory.thumbnail} 
           alt={memory.name} 

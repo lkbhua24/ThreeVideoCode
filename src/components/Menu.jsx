@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Mic, LayoutGrid, Menu as MenuIcon, X, Home, ChevronRight, ChevronLeft, Settings, Image as ImageIcon, Video, Map, Clock, Globe } from 'lucide-react';
+import { Sparkles, Mic, LayoutGrid, Menu as MenuIcon, X, Home, ChevronRight, ChevronLeft, Settings, Image as ImageIcon, Video, Map, Clock, Globe, HeartHandshake, Gamepad2 } from 'lucide-react';
 
 const MODES = [
   { 
@@ -51,7 +51,9 @@ const MODES = [
 const MAIN_MENU = [
   { id: 'mode_selection', label: '模式选择', icon: LayoutGrid, color: '#333' },
   { id: 'morning_dusk', label: '我们的故事', icon: Sparkles, color: '#DE7AD6' },
-  { id: 'travel_album', label: '旅行相册', icon: Globe, color: '#333' }
+  { id: 'travel_album', label: '旅行相册', icon: Globe, color: '#333' },
+  { id: 'fun_games', label: '趣味游戏', icon: Gamepad2, color: '#838896' },
+  { id: 'about_us', label: '关于我们', icon: HeartHandshake, color: '#6A5ACD' }
 ];
 
 const Menu = ({ currentMode, onModeChange }) => {
@@ -86,6 +88,16 @@ const Menu = ({ currentMode, onModeChange }) => {
           radial-gradient(circle at 90% 80%, rgba(230, 230, 250, 0.2) 0%, transparent 40%),
           linear-gradient(135deg, rgba(245, 230, 250, 0.85) 0%, rgba(230, 230, 250, 0.85) 100%)
         `;
+      case 'fun_games':
+        return `
+          radial-gradient(circle at 20% 30%, rgba(131, 136, 150, 0.3) 0%, transparent 50%),
+          radial-gradient(circle at 80% 70%, rgba(173, 216, 230, 0.3) 0%, transparent 50%),
+          linear-gradient(135deg, rgba(240, 248, 255, 0.85) 0%, rgba(230, 230, 250, 0.85) 100%)
+        `;
+      case 'about_us':
+        return `
+          linear-gradient(135deg, rgba(249, 221, 233, 0.85) 0%, rgba(212, 220, 246, 0.85) 100%)
+        `;
       case 'view':
         return `
           radial-gradient(circle at 10% 20%, rgba(176, 196, 222, 0.25) 0%, transparent 40%),
@@ -112,6 +124,8 @@ const Menu = ({ currentMode, onModeChange }) => {
         `;
     }
   };
+
+  
 
   return (
     <>
@@ -278,6 +292,8 @@ const Menu = ({ currentMode, onModeChange }) => {
               </div>
             </div>
 
+            
+
             {MAIN_MENU.map((item, index) => {
               const isExpanded = expandedMain === item.id;
               const Icon = item.icon;
@@ -322,6 +338,12 @@ const Menu = ({ currentMode, onModeChange }) => {
                         } else if (item.id === 'morning_dusk') {
                           onModeChange('morning_dusk');
                           setIsOpen(false);
+                        } else if (item.id === 'fun_games') {
+                          onModeChange('fun_games');
+                          setIsOpen(false);
+                        } else if (item.id === 'about_us') {
+                          onModeChange('about_us');
+                          setIsOpen(false);
                         }
                       }}
                       onContextMenu={(e) => {
@@ -364,7 +386,7 @@ const Menu = ({ currentMode, onModeChange }) => {
                           position: 'absolute',
                           left: '100%',
                           top: 0,
-                          background: 'rgba(255, 255, 255, 0.2)', // More transparent
+                          background: 'rgba(255, 255, 255, 0.85)', // Increased opacity for better readability
                           backdropFilter: 'blur(16px)', // Stronger blur
                           borderRadius: '24px', // More rounded
                           padding: '8px', // Compact

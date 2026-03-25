@@ -7,9 +7,9 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': 'http://localhost:3301',
-      '/media': 'http://localhost:3301',
-      '/selected-media': 'http://localhost:3301'
+      '/api': 'http://localhost:3302',
+      '/media': 'http://localhost:3302',
+      '/selected-media': 'http://localhost:3302'
     }
   }
 });

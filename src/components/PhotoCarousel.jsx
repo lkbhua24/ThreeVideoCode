@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { RefreshCw } from 'lucide-react';
 
 const PhotoCarousel = () => {
   const [photos, setPhotos] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
+  const fetchPhotos = () => {
+    setIsLoading(true);
     fetch('/api/selected-photos')
       .then(res => {
         if (!res.ok) {
@@ -16,11 +19,19 @@ const PhotoCarousel = () => {
       })
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
-          // Use relative URL directly, handled by Vite proxy
-          setPhotos(data);
+          // Limit to max 8 photos as requested
+          setPhotos(data.slice(0, 8));
+          setCurrentIndex(0);
         }
       })
-      .catch(err => console.error('Failed to load photos:', err));
+      .catch(err => console.error('Failed to load photos:', err))
+      .finally(() => {
+        setTimeout(() => setIsLoading(false), 500);
+      });
+  };
+
+  useEffect(() => {
+    fetchPhotos();
   }, []);
 
   useEffect(() => {
@@ -41,47 +52,117 @@ const PhotoCarousel = () => {
     setCurrentIndex((prev) => (prev - 1 + photos.length) % photos.length);
   };
 
-  // if (photos.length === 0) return null; // Removed to show empty box
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8 }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        position: 'absolute',
-        top: '130px', // Below menu (moved down 10px)
-        left: '24px',
-        width: '950px',
-        height: '500px',
-        borderRadius: '30px',
-        overflow: 'hidden',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,255,255,0.2)',
-        background: 'rgba(255,255,255,0.1)',
-        backdropFilter: 'blur(10px)',
-        zIndex: 10
-      }}
-    >
+    <>
+      {/* Refresh Button */}
+      <motion.button
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ scale: 1.05, backgroundColor: 'rgba(255, 255, 255, 0.4)' }}
+        whileTap={{ scale: 0.95 }}
+        onClick={fetchPhotos}
+        disabled={isLoading}
+        style={{
+          position: 'absolute',
+          top: '90px', // Positioned in the gap between menu and carousel
+          left: '24px',
+          zIndex: 20,
+          background: 'rgba(255, 255, 255, 0.25)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(255, 255, 255, 0.4)',
+          borderRadius: '20px',
+          padding: '8px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          color: '#555',
+          fontWeight: '600',
+          cursor: 'pointer',
+          fontSize: '14px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          outline: 'none'
+        }}
+      >
+        <motion.div
+          animate={{ rotate: isLoading ? 360 : 0 }}
+          transition={{ repeat: isLoading ? Infinity : 0, duration: 1, ease: "linear" }}
+        >
+          <RefreshCw size={16} />
+        </motion.div>
+        <span>探索</span>
+      </motion.button>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        style={{
+          position: 'absolute',
+          top: '130px', // Below menu (moved down 10px)
+          left: '24px',
+          width: '950px',
+          bottom: '120px', // Extend to bottom, leaving space for footer
+          borderRadius: '30px',
+          overflow: 'hidden',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,255,255,0.2)',
+          background: 'rgba(255,255,255,0.1)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 10
+        }}
+      >
       {photos.length > 0 ? (
         <>
           <AnimatePresence mode="wait">
-            <motion.img
+            <motion.div
               key={currentIndex}
-              src={photos[currentIndex].url}
-              alt="Featured"
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.8 }}
               style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: 'block'
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden'
               }}
-            />
+            >
+              {/* Blurred Background Layer */}
+              <img
+                src={photos[currentIndex].url}
+                alt=""
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  filter: 'blur(20px) brightness(0.7)',
+                  transform: 'scale(1.1)', // Prevent blur edges
+                  zIndex: 0
+                }}
+              />
+              
+              {/* Main Image Layer (Safe Display) */}
+              <motion.img
+                src={photos[currentIndex].url}
+                alt="Featured"
+                initial={{ scale: 1.05 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.8 }}
+                style={{
+                  position: 'relative',
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  objectFit: 'contain',
+                  zIndex: 1,
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.3)'
+                }}
+              />
+            </motion.div>
           </AnimatePresence>
 
           {/* Navigation Arrows (visible on hover) */}
@@ -172,6 +253,7 @@ const PhotoCarousel = () => {
         </div>
       )}
     </motion.div>
+    </>
   );
 };
 

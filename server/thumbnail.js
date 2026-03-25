@@ -4,9 +4,18 @@ const path = require('path');
 const fs = require('fs');
 
 let ffmpegStatic;
+let ffprobeStatic;
 try {
   ffmpegStatic = require('ffmpeg-static');
   ffmpeg.setFfmpegPath(ffmpegStatic);
+  
+  // Try to require ffprobe-static
+  try {
+    ffprobeStatic = require('ffprobe-static');
+    ffmpeg.setFfprobePath(ffprobeStatic.path);
+  } catch (e) {
+    console.warn('ffprobe-static not found, video thumbnails might fail');
+  }
 } catch (e) {
   console.warn('ffmpeg-static not found, video thumbnails disabled');
 }

@@ -1,42 +1,277 @@
 [
   {
-    "cityEN": "Paris",
-    "cityCN": "巴黎",
-    "arrivedAt": "2025-05-20",
-    "emojiType": "flower",
-    "emojiVariant": 1,
-    "folderName": "Paris"
-  },
-  {
-    "cityEN": "Tokyo",
-    "cityCN": "东京",
-    "arrivedAt": "2025-06-15",
-    "emojiType": "food",
-    "emojiVariant": 2,
-    "folderName": "Tokyo"
-  },
-  {
-    "cityEN": "Kyoto",
-    "cityCN": "京都",
-    "arrivedAt": "2025-06-20",
-    "emojiType": "animal",
-    "emojiVariant": 3,
-    "folderName": "Kyoto"
-  },
-  {
-    "cityEN": "London",
-    "cityCN": "伦敦",
-    "arrivedAt": "2025-07-10",
-    "emojiType": "flower",
-    "emojiVariant": 4,
-    "folderName": "London"
-  },
-  {
     "cityEN": "NanChang",
     "cityCN": "南昌",
     "arrivedAt": "2025-08-27",
     "emojiType": "flower",
     "emojiVariant": 1,
     "folderName": "Nanchang"
+  },
+  {
+    "cityEN": "WuHan",
+    "cityCN": "武汉",
+    "arrivedAt": "2024-05-02",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "WuHan",
+    "anniversary": "2025-05-20"
+  },
+  {
+    "cityEN": "ChongQing",
+    "cityCN": "重庆",
+    "arrivedAt": "2023-08-24",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "ChongQing"
+  },
+  {
+    "cityEN": "YueYang",
+    "cityCN": "岳阳",
+    "arrivedAt": "2025-06-01",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "YueYang",
+    "customCover": "/media/20250601/YueYang/13.jpg",
+    "anniversary": "2025-06-01"
+  },
+  {
+    "cityEN": "20230303",
+    "cityCN": "20230303",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20230303"
+  },
+  {
+    "cityEN": "20230625",
+    "cityCN": "20230625",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20230625"
+  },
+  {
+    "cityEN": "20231014",
+    "cityCN": "20231014",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20231014"
+  },
+  {
+    "cityEN": "20231223",
+    "cityCN": "20231223",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20231223"
+  },
+  {
+    "cityEN": "20240213",
+    "cityCN": "20240213",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20240213"
+  },
+  {
+    "cityEN": "20240303",
+    "cityCN": "20240303",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20240303"
+  },
+  {
+    "cityEN": "20240630",
+    "cityCN": "20240630",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20240630"
+  },
+  {
+    "cityEN": "20241212",
+    "cityCN": "20241212",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20241212"
+  },
+  {
+    "cityEN": "20250125",
+    "cityCN": "20250125",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20250125"
+  },
+  {
+    "cityEN": "20250222",
+    "cityCN": "20250222",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20250222"
+  },
+  {
+    "cityEN": "20250322",
+    "cityCN": "20250322",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20250322"
+  },
+  {
+    "cityEN": "20250404",
+    "cityCN": "20250404",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20250404"
+  },
+  {
+    "cityEN": "20250419",
+    "cityCN": "20250419",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20250419"
+  },
+  {
+    "cityEN": "20250420",
+    "cityCN": "20250420",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20250420"
+  },
+  {
+    "cityEN": "20250621",
+    "cityCN": "20250621",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20250621"
+  },
+  {
+    "cityEN": "20250721",
+    "cityCN": "20250721",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20250721"
+  },
+  {
+    "cityEN": "20250729",
+    "cityCN": "20250729",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20250729"
+  },
+  {
+    "cityEN": "20250909",
+    "cityCN": "20250909",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20250909"
+  },
+  {
+    "cityEN": "20250910",
+    "cityCN": "20250910",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20250910"
+  },
+  {
+    "cityEN": "20251007",
+    "cityCN": "20251007",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20251007"
+  },
+  {
+    "cityEN": "20251025",
+    "cityCN": "20251025",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20251025"
+  },
+  {
+    "cityEN": "20251128",
+    "cityCN": "20251128",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20251128"
+  },
+  {
+    "cityEN": "20251204",
+    "cityCN": "20251204",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20251204"
+  },
+  {
+    "cityEN": "20251212",
+    "cityCN": "20251212",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20251212"
+  },
+  {
+    "cityEN": "20251222",
+    "cityCN": "20251222",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20251222"
+  },
+  {
+    "cityEN": "20251231",
+    "cityCN": "20251231",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20251231"
+  },
+  {
+    "cityEN": "20260104",
+    "cityCN": "20260104",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20260104"
+  },
+  {
+    "cityEN": "20260108",
+    "cityCN": "20260108",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20260108"
+  },
+  {
+    "cityEN": "20260131",
+    "cityCN": "20260131",
+    "arrivedAt": "2026-03-04",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20260131"
+  },
+  {
+    "cityEN": "20260308",
+    "cityCN": "20260308",
+    "arrivedAt": "2026-03-12",
+    "emojiType": "flower",
+    "emojiVariant": 1,
+    "folderName": "20260308"
   }
 ]
